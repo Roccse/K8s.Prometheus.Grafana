@@ -1,0 +1,20 @@
+# Credentials and local cluster state
+*.pem
+*.key
+*.crt
+*kubeconfig*
+.kube/
+work/ssh-temp/
+
+# Runtime data and large artifacts
+*.tar
+*.img
+prometheus-data/
+grafana-data/
+*.log
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
