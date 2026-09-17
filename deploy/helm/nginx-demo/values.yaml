@@ -26,9 +26,6 @@ podSecurityContext:
 
 containerSecurityContext:
   allowPrivilegeEscalation: false
-  capabilities:
-    drop:
-      - ALL
 
 topologySpreadConstraints:
   - maxSkew: 1
