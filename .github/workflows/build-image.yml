@@ -32,7 +32,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=sha
+            type=sha,format=long
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push
@@ -50,3 +50,35 @@ jobs:
 
       - name: Lint Helm chart
         run: helm lint deploy/helm/nginx-demo
+
+  deploy:
+    needs: build
+    runs-on: [self-hosted, linux, x64]
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Deploy to local Kubernetes
+        env:
+          IMAGE_REPOSITORY: ghcr.io/${{ github.repository }}
+          IMAGE_TAG: sha-${{ github.sha }}
+        run: |
+          helm upgrade --install nginx-demo deploy/helm/nginx-demo \
+            --namespace demo \
+            --create-namespace \
+            --set image.repository="$IMAGE_REPOSITORY" \
+            --set image.tag="$IMAGE_TAG" \
+            --set service.nodePort=31259
+
+      - name: Verify rollout
+        run: |
+          kubectl rollout status deployment/nginx-demo-nginx-demo \
+            --namespace demo \
+            --timeout=120s
+          curl --fail --silent --show-error http://127.0.0.1:31259 >/dev/null
