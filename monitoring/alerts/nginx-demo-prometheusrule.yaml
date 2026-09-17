@@ -1,0 +1,29 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: nginx-demo-alerts
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: nginx-demo
+    release: prometheus
+spec:
+  groups:
+    - name: nginx-demo.rules
+      rules:
+        - alert: NginxDemoUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="demo", deployment="nginx-demo-nginx-demo"} < 1
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: nginx-demo 没有可用副本
+            description: Deployment nginx-demo 在 demo 命名空间中连续 5 分钟没有可用副本。
+
+        - alert: NginxDemoPodRestarting
+          expr: increase(kube_pod_container_status_restarts_total{namespace="demo", pod=~"nginx-demo-nginx-demo-.*"}[10m]) > 2
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: nginx-demo Pod 重启次数过高
+            description: nginx-demo Pod 在最近 10 分钟内重启次数超过 2 次。
